@@ -1,10 +1,24 @@
 from django.shortcuts import render, redirect
-from .models import Room
+from .models import Room, Topic
 from .forms import RoomForm
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.db.models import Q
 
 def home(request):
-    rooms = Room.objects.all()
-    context = {'rooms' : rooms}
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    q = request.GET.get('q') if request.GET.get('q') != None else ''
+    rooms = Room.objects.filter(
+        Q(topic__name__icontains=q) |
+        Q(name__icontains=q) |
+        Q(description__icontains=q)
+    )
+    if is_ajax:
+        html = render_to_string(template_name="base/partial_room.html", context={'rooms' : rooms})
+        dataDict = {'rooms' : html}
+        return JsonResponse(dataDict, safe=False)
+    topics = Topic.objects.all()
+    context = {'rooms' : rooms, 'topics' : topics}
     return render(request, 'base/home.html', context)
 
 
