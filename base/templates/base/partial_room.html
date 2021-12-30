@@ -1,5 +1,8 @@
+
+{% if rooms %}
 {% for room in rooms %}
 <div>
+    <h5>{{room_count}} rooms found</h5>
     <a href="{% url 'update-room' room.id %}">Edit</a>
     <a href="{% url 'delete-room' room.id %}">Delete</a>
     <span>@{{room.host.username}}</span>
@@ -8,3 +11,8 @@
     <hr>
 </div>
 {% endfor %}
+{% else %}
+<div>
+    <h5>no rooms found</h5>
+</div>
+{% endif %}

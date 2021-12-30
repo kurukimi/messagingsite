@@ -12,7 +12,6 @@ let ajax_call = function (endpoint, request_parameters) {
             partial_room_div.fadeTo(500, 0).promise().then(() => {
                 // replace the HTML contents
                 partial_room_div.html(response['rooms'])
-                console.log(response.rooms)
                 // fade-in the div with new contents
                 partial_room_div.fadeTo(500, 1)
                 

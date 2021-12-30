@@ -8,17 +8,21 @@ from django.db.models import Q
 def home(request):
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     q = request.GET.get('q') if request.GET.get('q') != None else ''
+
     rooms = Room.objects.filter(
         Q(topic__name__icontains=q) |
         Q(name__icontains=q) |
         Q(description__icontains=q)
     )
+    room_count = rooms.count()
+
     if is_ajax:
-        html = render_to_string(template_name="base/partial_room.html", context={'rooms' : rooms})
+        html = render_to_string(template_name="base/partial_room.html", context={'rooms' : rooms, 'room_count':room_count})
         dataDict = {'rooms' : html}
         return JsonResponse(dataDict, safe=False)
+
     topics = Topic.objects.all()
-    context = {'rooms' : rooms, 'topics' : topics}
+    context = {'rooms' : rooms, 'topics' : topics, 'room_count':room_count}
     return render(request, 'base/home.html', context)
 
 
