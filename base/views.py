@@ -77,22 +77,22 @@ def home(request):
 
 
 def room(request, pk):
-    room = Room.objects.get(id=pk)
-    room_messages = room.message_set.all().order_by('-created')
-    participants = room.participants.all()
-
+    form = RoomForm()
+    topics = Topic.objects.all()
     if request.method == 'POST':
-        message = Message.objects.create(
-            user=request.user,
-            room=room,
-            body=request.POST.get('body')
+        topic_name = request.POST.get('topic')
+        topic, created = Topic.objects.get_or_create(name=topic_name)
+
+        Room.objects.create(
+            host=request.user,
+            topic=topic,
+            name=request.POST.get('name'),
+            description=request.POST.get('description'),
         )
-        room.participants.add(request.user)
-        return redirect('room', pk=room.id)
+        return redirect('home')
 
-    context = {'room':room, 'room_messages': room_messages, 'participants':participants}
-    return render(request, 'base/room.html', context)
-
+    context = {'form': form, 'topics': topics}
+    return render(request, 'base/room_form.html', context)
 
 
 def userProfile(request, pk):
@@ -100,7 +100,8 @@ def userProfile(request, pk):
     rooms = user.room_set.all()
     room_messages = user.message_set.all()
     topics = Topic.objects.all()
-    context = {'user':user, 'rooms' : rooms, 'room_messages': room_messages, 'topics':topics}
+    context = {'user': user, 'rooms': rooms,
+               'room_messages': room_messages, 'topics': topics}
     return render(request, 'base/profile.html', context)
 
 
@@ -110,7 +111,9 @@ def createRoom(request):
     if request.method == 'POST':
         form = RoomForm(request.POST)
         if form.is_valid():
-            form.save()
+            room = form.save(commit=False)
+            room.host = request.user
+            room.save()
             return redirect('home')
     context = {'form': form}
     return render(request, 'base/room_form.html', context)
@@ -155,3 +158,14 @@ def deleteMessage(request, pk):
         message.delete()
         return redirect('home')
     return render(request, 'base/delete.html', {'obj': message})
+
+
+def topicsPage(request):
+    q = request.GET.get('q') if request.GET.get('q') != None else ''
+    topics = Topic.objects.filter(name__icontains=q)
+    return render(request, 'base/topics.html', {'topics': topics})
+
+
+def activityPage(request):
+    room_messages = Message.objects.all()
+    return render(request, 'base/activity.html', {'room_messages': room_messages})
